@@ -137,3 +137,11 @@ for am in merged['account'].unique():
         })
 
 am_coef_df = pd.DataFrame(am_results)
+
+# === 7. Итоговый отчёт ===
+with pd.ExcelWriter('prolongation_final_report.xlsx') as writer:
+    coef_df.to_excel(writer, sheet_name='Department', index=False)
+    am_coef_df.to_excel(writer, sheet_name='By Managers', index=False)
+
+
+    print('Расчёт завершён. Файл prolongation_final_report.xlsx создан.')

@@ -69,7 +69,7 @@ results = []
 
 for i in range(1, len(months)):
     prev_m = months[i - 1]
-    curr_m = months[i]
+    curr_m = months[i] # Текущий месяц (Целевой)
 
 
     # Первый месяц пролонгации
@@ -78,18 +78,18 @@ for i in range(1, len(months)):
         continue
 
 
-    denom_sum = denom_df[prev_m].sum()
-    numer_sum = denom_df[curr_m].sum()
-    coef1 = numer_sum / denom_sum if denom_sum > 0 else 0
+    denom_sum = denom_df[prev_m].sum() #сумма отгрузки этих проектов в их последнем месяце реализации (M−1)
+    numer_sum = denom_df[curr_m].sum() #сумма отгрузки этих же проектов в целевом месяце M.
+    coef1 = numer_sum / denom_sum if denom_sum > 0 else 0 # Находим первый коэффициент пролонгации
 
 
     # Второй месяц пролонгации
-    prev_prev_m = months[i - 2] if i - 2 >= 0 else None
+    prev_prev_m = months[i - 2] if i - 2 >= 0 else None #Проекты, завершившиеся 2 месяца назад
     if prev_prev_m:
-        denom2_df = merged[(merged['month'] == prev_prev_m) & (merged[months[i - 1]] == 0)]
-        denom2_sum = denom2_df[prev_prev_m].sum()
-        numer2_sum = denom2_df[curr_m].sum()
-        coef2 = numer2_sum / denom2_sum if denom2_sum > 0 else 0
+        denom2_df = merged[(merged['month'] == prev_prev_m) & (merged[months[i - 1]] == 0)]  # Новая таблица с проектами, которые пролонгировались спустя месяц
+        denom2_sum = denom2_df[prev_prev_m].sum() # Сумма отгрузки этих проектов в их последнем месяце реализации (M−2)
+        numer2_sum = denom2_df[curr_m].sum() # Сумма отгрузки этих проектов в целевом месяце M
+        coef2 = numer2_sum / denom2_sum if denom2_sum > 0 else 0 # Находим второй коэффициент пролонгации
     else:
         coef2 = np.nan
 
@@ -108,24 +108,24 @@ coef_df = pd.DataFrame(results)
 am_results = []
 
 for am in merged['account'].unique():
-    am_df = merged[merged['account'] == am]
+    am_df = merged[merged['account'] == am] # Берем строки для каждого менеджера
 
     for i in range(1, len(months)):
         prev_m = months[i - 1]
         curr_m = months[i]
 
         # --- Первый месяц пролонгации ---
-        denom_sum = am_df[am_df['month'] == prev_m][prev_m].sum()
-        numer_sum = am_df[am_df['month'] == prev_m][curr_m].sum()
-        coef1 = numer_sum / denom_sum if denom_sum > 0 else 0
+        denom_sum = am_df[am_df['month'] == prev_m][prev_m].sum() # Сумма отгрузки в последний месяц реализации
+        numer_sum = am_df[am_df['month'] == prev_m][curr_m].sum() # Сумма отгрузки в следующий месяц
+        coef1 = numer_sum / denom_sum if denom_sum > 0 else 0 # Расчет первого коэффициента пролонгации
 
         # --- Второй месяц пролонгации ---
-        prev_prev_m = months[i - 2] if i - 2 >= 0 else None
+        prev_prev_m = months[i - 2] if i - 2 >= 0 else None # Если у этого месяца есть пред предыдущий месяц
         if prev_prev_m:
-            denom2_df = am_df[(am_df['month'] == prev_prev_m) & (am_df[months[i - 1]] == 0)]
-            denom2_sum = denom2_df[prev_prev_m].sum()
-            numer2_sum = denom2_df[curr_m].sum()
-            coef2 = numer2_sum / denom2_sum if denom2_sum > 0 else 0
+            denom2_df = am_df[(am_df['month'] == prev_prev_m) & (am_df[months[i - 1]] == 0)] # Проверка что месяц является последним месяцем отгрузки, в следующем стоимость 0, а в следующем проект пролонгирован
+            denom2_sum = denom2_df[prev_prev_m].sum() # Сумма последних отгрузок в месяце
+            numer2_sum = denom2_df[curr_m].sum() # Сумма пролонгируемых отгрузок через месяц
+            coef2 = numer2_sum / denom2_sum if denom2_sum > 0 else 0 # Нахождение второго коэффициента пролонгации
         else:
             coef2 = np.nan
 

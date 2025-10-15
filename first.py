@@ -104,3 +104,36 @@ for i in range(1, len(months)):
 coef_df = pd.DataFrame(results)
 
 
+# === 6. Расчёт коэффициентов по каждому менеджеру ===
+am_results = []
+
+for am in merged['account'].unique():
+    am_df = merged[merged['account'] == am]
+
+    for i in range(1, len(months)):
+        prev_m = months[i - 1]
+        curr_m = months[i]
+
+        # --- Первый месяц пролонгации ---
+        denom_sum = am_df[am_df['month'] == prev_m][prev_m].sum()
+        numer_sum = am_df[am_df['month'] == prev_m][curr_m].sum()
+        coef1 = numer_sum / denom_sum if denom_sum > 0 else 0
+
+        # --- Второй месяц пролонгации ---
+        prev_prev_m = months[i - 2] if i - 2 >= 0 else None
+        if prev_prev_m:
+            denom2_df = am_df[(am_df['month'] == prev_prev_m) & (am_df[months[i - 1]] == 0)]
+            denom2_sum = denom2_df[prev_prev_m].sum()
+            numer2_sum = denom2_df[curr_m].sum()
+            coef2 = numer2_sum / denom2_sum if denom2_sum > 0 else 0
+        else:
+            coef2 = np.nan
+
+        am_results.append({
+            'account': am,
+            'month': curr_m,
+            'coef_first_month': round(coef1, 3),
+            'coef_second_month': round(coef2, 3)
+        })
+
+am_coef_df = pd.DataFrame(am_results)
